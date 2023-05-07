@@ -28,20 +28,16 @@ io.on("connection", (socket) => {
   });
 
   socket.on("code-send", async (message) => {
-    console.log(message.roomCode);
     if (!(await prisma.room.findFirst({ where: { name: message.roomCode } }))) {
       await prisma.room.create({ data: { name: message.roomCode, code: "" } });
     }
 
-    io.to(message.roomCode).emit("code-receive", {
-      data: message.data,
-      socketId: socket.id,
-    });
-
-    await prisma.room.update({
+    const res = await prisma.room.update({
       where: { name: message.roomCode as string },
       data: { code: message.data as string },
     });
+
+    io.to(message.roomCode).emit("code-receive", res.code);
   });
 
   socket.on("disconnect", () => {
