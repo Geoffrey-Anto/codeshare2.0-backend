@@ -16,4 +16,5 @@ model room {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   code      String   @default("")
+  language  String   @default("text")
 }

@@ -28,16 +28,17 @@ io.on("connection", (socket) => {
   });
 
   socket.on("code-send", async (message) => {
-    if (!(await prisma.room.findFirst({ where: { name: message.roomCode } }))) {
-      await prisma.room.create({ data: { name: message.roomCode, code: "" } });
-    }
-
-    const res = await prisma.room.update({
-      where: { name: message.roomCode as string },
-      data: { code: message.data as string },
+    io.to(message.roomCode).emit("code-receive", {
+      data: message.data,
+      roomCode: message.clientUUID,
+      codeLanguage: message.codeLanguage,
+      roomUserCount: io.sockets.adapter.rooms.get(message.roomCode)?.size,
     });
 
-    io.to(message.roomCode).emit("code-receive", res.code);
+    await prisma.room.update({
+      where: { name: message.roomCode as string },
+      data: { code: message.data as string, language: message.codeLanguage },
+    });
   });
 
   socket.on("disconnect", () => {
@@ -57,7 +58,7 @@ app.get("/code/:room", async (req, res) => {
 
   if (!roomData) return res.status(404).send({ error: "Room not found" });
 
-  return res.json({ code: roomData.code });
+  return res.json({ code: roomData.code, language: roomData.language });
 });
 
 httpServer.listen(process.env.PORT, () =>
