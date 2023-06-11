@@ -36,14 +36,17 @@ io.on("connection", (socket) => {
         socket.join(roomCode);
     }));
     socket.on("code-send", (message) => __awaiter(void 0, void 0, void 0, function* () {
-        if (!(yield prisma.room.findFirst({ where: { name: message.roomCode } }))) {
-            yield prisma.room.create({ data: { name: message.roomCode, code: "" } });
-        }
-        const res = yield prisma.room.update({
-            where: { name: message.roomCode },
-            data: { code: message.data },
+        var _a;
+        io.to(message.roomCode).emit("code-receive", {
+            data: message.data,
+            roomCode: message.clientUUID,
+            codeLanguage: message.codeLanguage,
+            roomUserCount: (_a = io.sockets.adapter.rooms.get(message.roomCode)) === null || _a === void 0 ? void 0 : _a.size,
         });
-        io.to(message.roomCode).emit("code-receive", res.code);
+        yield prisma.room.update({
+            where: { name: message.roomCode },
+            data: { code: message.data, language: message.codeLanguage },
+        });
     }));
     socket.on("disconnect", () => {
         console.log("user disconnected");
@@ -59,7 +62,7 @@ app.get("/code/:room", (req, res) => __awaiter(void 0, void 0, void 0, function*
     const roomData = yield prisma.room.findFirst({ where: { name: room } });
     if (!roomData)
         return res.status(404).send({ error: "Room not found" });
-    return res.json({ code: roomData.code });
+    return res.json({ code: roomData.code, language: roomData.language });
 }));
 httpServer.listen(process.env.PORT, () => console.log(`Server running on port ${process.env.PORT}`));
 //# sourceMappingURL=index.js.map
