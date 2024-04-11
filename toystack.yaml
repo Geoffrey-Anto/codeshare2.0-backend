@@ -1,0 +1,11 @@
+name: Toystack
+version: 1
+env_variables:
+  DATABASE_URL="postgres://codesharedb:codesharedb@4.224.165.135:5432/codesharedb"
+port: 8080
+scheme: https
+build-type: "on-commit"
+domain: codeshare20api.toystack.co
+entry-point: "yarn install && yarn build && yarn start"
+time-to-live: 30
+production: True
