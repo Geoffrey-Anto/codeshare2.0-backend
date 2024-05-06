@@ -10,8 +10,10 @@ COPY . .
 
 ENV PORT=3001
 
+ENV DATABSE_URL=$DATABASE_URL
+
 EXPOSE 3001
 
-RUN npm build
+RUN npx prisma generate
 
-CMD ["npm", "start"]
+CMD ["npm", "run", "dev"]
